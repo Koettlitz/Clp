@@ -5,8 +5,10 @@ import static java.util.stream.Collectors.toMap;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,8 +34,11 @@ import de.dk.util.PeekableIterator;
  * @see ArgumentParserBuilder
  */
 public class ArgumentParser {
-   private static final String HELP = "--help";
-   private static final String SHORT_HELP = "-h";
+   private static final String[] DEFAULT_HELP_ARGS = new String[] {
+      "-h",
+      "--help",
+      "?"
+   };
 
    private final List<ExpectedPlainArgument> arguments;
    private final Map<Character, ExpectedOption> options;
@@ -42,6 +47,7 @@ public class ArgumentParser {
 
    private ExpectedArgument[] allArguments;
 
+   private Collection<String> helpArgs = new LinkedList<>(Arrays.asList(DEFAULT_HELP_ARGS));
    private boolean ignoreUnknown = false;
 
    public ArgumentParser(List<ExpectedPlainArgument> arguments,
@@ -303,10 +309,11 @@ public class ArgumentParser {
     * @return <code>true</code> if the arguments match "help" or "h", <code>false</code> otherwise.
     */
    public boolean isHelp(String... args) {
-      if (args == null || args.length < 1)
+      if (args == null || args.length < 1 || helpArgs == null)
          return false;
 
-      return args[0].equals(HELP) || args[0].equals(SHORT_HELP);
+      return helpArgs.stream()
+                     .anyMatch(args[0]::equals);
    }
 
    /**
@@ -371,6 +378,38 @@ public class ArgumentParser {
     */
    public void setIgnoreUnknown(boolean ignoreUnknown) {
       this.ignoreUnknown = ignoreUnknown;
+   }
+
+   /**
+    * Get the arguments that indicate that help is requested.
+    * If the first given argument equals one of the helpArgs
+    * {@link #isHelp(String...)} returns <code>true</code>
+    * By default it is <code>"-h"</code>, <code>"--help"</code> and <code>"?"</code>.
+    * This method returns a reference to the actual collection that is used by this ArgumentParser,
+    * so changes on the returned collection will have effect.
+    *
+    * @return The arguments that indicate help
+    *
+    * @see #printUsage(PrintStream)
+    * @see #printUsageIfHelpRequested(PrintStream, String...)
+    */
+   public Collection<String> getHelpArgs() {
+      return helpArgs;
+   }
+
+   /**
+    * Set the arguments that indicate that help is requested.
+    * If the first given argument equals one of the <code>helpArgs</code>
+    * {@link #isHelp(String...)} returns <code>true</code>
+    * By default it is <code>"-h"</code>, <code>"--help"</code> and <code>"?"</code>.
+    *
+    * @param helpArgs The arguments that indicate the need of help.
+    *
+    * @see #printUsage(PrintStream)
+    * @see #printUsageIfHelpRequested(PrintStream, String...)
+    */
+   public void setHelpArgs(Collection<String> helpArgs) {
+      this.helpArgs = helpArgs;
    }
 
 }
