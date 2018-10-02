@@ -48,7 +48,6 @@ public class PlainArgumentBuilder implements ArgumentBuilder {
     *
     * @return This argument builder to go on
     */
-   @Override
    public PlainArgumentBuilder setMandatory(boolean mandatory) {
       argument.setMandatory(mandatory);
       return this;

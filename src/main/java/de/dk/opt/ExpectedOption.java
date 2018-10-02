@@ -12,7 +12,6 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
    private final short index;
    private char key;
    private String longKey;
-   private boolean mandatory;
    private boolean expectsValue;
    private String description;
 
@@ -22,26 +21,15 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
    public ExpectedOption(short index,
                          char key,
                          String longKey,
-                         boolean mandatory,
                          String description) {
       this.index = index;
       this.key = key;
       this.longKey = longKey;
-      this.mandatory = mandatory;
-      this.expectsValue = mandatory;
       this.description = description;
    }
 
-   public ExpectedOption(short index, char key, String longKey, String description) {
-      this(index, key, longKey, false, description);
-   }
-
-   public ExpectedOption(short index, char key, boolean mandatory, String description) {
-      this(index, key, null, mandatory, description);
-   }
-
    public ExpectedOption(short index, char key, String description) {
-      this(index, key, null, false, description);
+      this(index, key, null, description);
    }
 
    public ExpectedOption(short index, char key) {
@@ -63,11 +51,6 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
       return value;
    }
 
-   public void setMandatory(boolean mandatory) {
-      this.mandatory = mandatory;
-      this.expectsValue |= mandatory;
-   }
-
    public void setDescription(String description) {
       this.description = description;
    }
@@ -83,7 +66,6 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
 
    public void setExpectsValue(boolean expectsValue) {
       this.expectsValue = expectsValue;
-      this.mandatory &= expectsValue;
    }
 
    public void setPresent(boolean present) {
@@ -117,11 +99,6 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
          return longKey;
 
       return "" + key;
-   }
-
-   @Override
-   public boolean isMandatory() {
-      return mandatory;
    }
 
    @Override
@@ -164,7 +141,6 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
       int result = 1;
       result = prime * result + this.key;
       result = prime * result + ((this.longKey == null) ? 0 : this.longKey.hashCode());
-      result = prime * result + (this.mandatory ? 1231 : 1237);
       result = prime * result + ((this.value == null) ? 0 : this.value.hashCode());
       return result;
    }
@@ -184,8 +160,6 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
          if (other.longKey != null)
             return false;
       } else if (!this.longKey.equals(other.longKey))
-         return false;
-      if (this.mandatory != other.mandatory)
          return false;
       if (this.value == null) {
          if (other.value != null)

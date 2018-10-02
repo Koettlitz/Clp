@@ -10,10 +10,7 @@ import java.util.Iterator;
 
 import org.junit.jupiter.api.Test;
 
-import de.dk.opt.ArgumentModel;
-import de.dk.opt.ArgumentParser;
-import de.dk.opt.ArgumentParserBuilder;
-import de.dk.opt.ExpectedOption;
+import de.dk.opt.ex.InvalidOptionFormatException;
 import de.dk.opt.ex.MissingArgumentException;
 import de.dk.opt.ex.MissingOptionValueException;
 import de.dk.opt.ex.UnexpectedOptionValueException;
@@ -47,10 +44,12 @@ public class ArgumentParserTest {
    private static ArgumentModel parse(ArgumentParser parser, String... args) {
       try {
          return parser.parseArguments(args);
-      } catch (MissingArgumentException
-               | MissingOptionValueException
-               | UnknownArgumentException
-               | UnexpectedOptionValueException e) {
+      } catch (MissingArgumentException |
+               MissingOptionValueException |
+               UnknownArgumentException |
+               UnexpectedOptionValueException |
+               InvalidOptionFormatException |
+               IllegalArgumentException e) {
          fail(e.getMessage());
       }
       return null;
@@ -109,7 +108,7 @@ public class ArgumentParserTest {
    public void singleOptionValueIsPresent() {
       ArgumentParser parser = ArgumentParserBuilder.begin()
                                                    .buildOption(OPT_KEY0)
-                                                      .setMandatory(true)
+                                                      .setExpectsValue(true)
                                                       .build()
                                                    .buildAndGet();
 
@@ -213,14 +212,15 @@ public class ArgumentParserTest {
    }
 
    @Test
-   public void mandatoryOptionExpectsValue() {
+   public void optionThatExpectsValueCannotBeInFrontInOneToken() {
       ArgumentParser parser = ArgumentParserBuilder.begin()
                                                    .buildOption(OPT_KEY0)
-                                                      .setMandatory(true)
+                                                      .setExpectsValue(true)
                                                       .build()
+                                                   .addOption(OPT_KEY1)
                                                    .buildAndGet();
 
-      assertThrows(MissingOptionValueException.class, () -> parser.parseArguments("-" + OPT_KEY0));
+      assertThrows(InvalidOptionFormatException.class, () -> parser.parseArguments("-" + OPT_KEY0 + OPT_LONG_KEY1, OPT_VALUE0));
    }
 
    @Test
@@ -306,8 +306,7 @@ public class ArgumentParserTest {
       assertFalse(result.isOptionPresent(OPT_KEY0));
 
       assertThrows(MissingArgumentException.class, () -> {
-            ArgumentModel tmpResult = parser.parseArguments(ARG_VALUE0, ARG_VALUE1, "-8", "-" + OPT_KEY0);
-            assertTrue(tmpResult.isOptionPresent(OPT_KEY0));
+         parser.parseArguments(ARG_VALUE0, ARG_VALUE1, "-8", "-" + OPT_KEY0);
       });
 
    }
@@ -318,7 +317,7 @@ public class ArgumentParserTest {
                                                    .addArgument(ARG_NAME0)
                                                    .addArgument(ARG_NAME1)
                                                    .buildOption(OPT_KEY0)
-                                                      .setMandatory(true)
+                                                      .setExpectsValue(true)
                                                       .build()
                                                    .addOption(OPT_KEY1)
                                                    .addOption(OPT_KEY2)
@@ -346,7 +345,6 @@ public class ArgumentParserTest {
    public void testSimpleCommand() {
       ArgumentParser parser = ArgumentParserBuilder.begin()
                                                    .buildCommand(CMD_NAME0)
-                                                      .setMandatory(true)
                                                       .build()
                                                    .buildAndGet();
       ArgumentModel result = parse(parser, CMD_NAME0);
@@ -357,12 +355,11 @@ public class ArgumentParserTest {
    public void testComplexCommand() {
       ArgumentParser parser = ArgumentParserBuilder.begin()
                                                    .buildCommand(CMD_NAME0)
-                                                      .setMandatory(true)
                                                       .buildParser()
                                                          .addArgument(ARG_NAME0)
                                                          .addArgument(ARG_NAME1)
                                                          .buildOption(OPT_KEY0)
-                                                            .setMandatory(true)
+                                                            .setExpectsValue(true)
                                                             .build()
                                                          .addOption(OPT_KEY1)
                                                          .addOption(OPT_KEY2)
@@ -393,7 +390,7 @@ public class ArgumentParserTest {
 
    @Test
    public void syntaxIsCreatedCorrectly() {
-      String expected = String.format("<%s> [<%s>] -%s <%s> [--%s] --%s=<%s>",
+      String expected = String.format("<%s> [<%s>] [-%s <%s>] [--%s] [--%s=<%s>]",
                                       ARG_NAME0,
                                       ARG_NAME1,
                                       OPT_KEY0,
@@ -408,12 +405,12 @@ public class ArgumentParserTest {
                                                       .setMandatory(false)
                                                       .build()
                                                    .buildOption(OPT_KEY0)
-                                                      .setMandatory(true)
+                                                      .setExpectsValue(true)
                                                       .setLongKey("loong")
                                                       .build()
                                                    .addOption(OPT_LONG_KEY1)
                                                    .buildOption(OPT_LONG_KEY2)
-                                                      .setMandatory(true)
+                                                      .setExpectsValue(true)
                                                       .build()
                                                    .buildAndGet();
       assertEquals(expected, parser.syntax());
@@ -427,20 +424,6 @@ public class ArgumentParserTest {
                                                    .buildAndGet();
 
       assertThrows(MissingArgumentException.class, () -> parser.parseArguments(ARG_VALUE0));
-   }
-
-   @Test
-   public void exceptionThrownWhenMissingAMandatoryOption() throws MissingArgumentException {
-      ArgumentParser parser = ArgumentParserBuilder.begin()
-                                                   .buildOption(OPT_KEY0)
-                                                      .setMandatory(true)
-                                                      .build()
-                                                   .buildOption(OPT_KEY1)
-                                                      .setMandatory(true)
-                                                      .build()
-                                                   .buildAndGet();
-
-      assertThrows(MissingArgumentException.class, () -> parser.parseArguments("-" + OPT_KEY0, OPT_VALUE0));
    }
 
    @Test

@@ -47,18 +47,17 @@ public class ExpectedPlainArgument implements ExpectedArgument, Cloneable {
       return name;
    }
 
-   @Override
    public boolean isMandatory() {
       return mandatory;
+   }
+
+   public void setMandatory(boolean mandatory) {
+      this.mandatory = mandatory;
    }
 
    @Override
    public String getDescription() {
       return description;
-   }
-
-   public void setMandatory(boolean mandatory) {
-      this.mandatory = mandatory;
    }
 
    public void setDescription(String description) {

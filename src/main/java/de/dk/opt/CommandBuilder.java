@@ -50,12 +50,6 @@ public class CommandBuilder implements ArgumentBuilder {
    }
 
    @Override
-   public CommandBuilder setMandatory(boolean mandatory) {
-      command.setMandatory(mandatory);
-      return this;
-   }
-
-   @Override
    public CommandBuilder setDescription(String description) {
       command.setDescription(description);
       return this;

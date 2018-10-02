@@ -2,7 +2,6 @@ package de.dk.opt;
 
 import static de.dk.opt.ExpectedOption.NO_KEY;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,8 +11,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import de.dk.opt.ex.InvalidOptionFormatException;
 import de.dk.opt.ex.MissingArgumentException;
 import de.dk.opt.ex.MissingOptionValueException;
 import de.dk.opt.ex.UnexpectedOptionValueException;
@@ -57,10 +56,9 @@ public class ArgumentModelBuilder {
       this.longOptions = Objects.requireNonNull(longOptions);
       this.commands = commands == null ? new HashMap<>(0) : commands;
       this.plainArgIndex = plainArgIndex;
-      this.mandatories = Stream.of(arguments, options.values(), commands.values())
-                               .flatMap(Collection::stream)
-                               .filter(ExpectedArgument::isMandatory)
-                               .collect(Collectors.toList());
+      this.mandatories = arguments.stream()
+                                  .filter(ExpectedPlainArgument::isMandatory)
+                                  .collect(Collectors.toList());
    }
 
    /**
@@ -313,11 +311,15 @@ public class ArgumentModelBuilder {
     * @throws UnexpectedOptionValueException If an option value for an option that doesn't expect any value was supplied
     * e.g. If an option <code>[-f --foo]</code> is just intended as a simple flag, that doesn't expect any value
     * is given like <code>--foo=bar</code>
+    * @throws InvalidOptionFormatException If a token with multiple options in it contains an option,
+    * that expects a value and is not the last char of the token, e.g. <code>-abc</code> is given
+    * where option <code>a</code> expects a value
     */
    public boolean parseCommand(String name, PeekableIterator<String> argIterator) throws MissingArgumentException,
                                                                                          MissingOptionValueException,
                                                                                          UnknownArgumentException,
-                                                                                         UnexpectedOptionValueException {
+                                                                                         UnexpectedOptionValueException,
+                                                                                         InvalidOptionFormatException {
       Command cmd = commands.get(name);
       if (cmd == null)
          return false;

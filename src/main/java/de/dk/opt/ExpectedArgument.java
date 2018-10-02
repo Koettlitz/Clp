@@ -12,7 +12,6 @@ package de.dk.opt;
 public interface ExpectedArgument extends Comparable<ExpectedArgument> {
    public short getIndex();
    public String getName();
-   public boolean isMandatory();
    public String fullName();
    public String getDescription();
    public boolean isPresent();

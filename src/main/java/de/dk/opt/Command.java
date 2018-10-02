@@ -8,7 +8,6 @@ import java.util.Objects;
  */
 public class Command implements ExpectedArgument, Cloneable {
    private String name;
-   private boolean mandatory;
    private final short index;
    private String description;
    private ArgumentModel value;
@@ -55,15 +54,6 @@ public class Command implements ExpectedArgument, Cloneable {
 
    public void setName(String name) {
       this.name = name;
-   }
-
-   @Override
-   public boolean isMandatory() {
-      return mandatory;
-   }
-
-   public void setMandatory(boolean mandatory) {
-      this.mandatory = mandatory;
    }
 
    @Override

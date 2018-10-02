@@ -16,12 +16,14 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import de.dk.opt.ex.InvalidOptionFormatException;
 import de.dk.opt.ex.MissingArgumentException;
 import de.dk.opt.ex.MissingOptionValueException;
 import de.dk.opt.ex.UnexpectedOptionValueException;
 import de.dk.opt.ex.UnknownArgumentException;
 import de.dk.util.ArrayIterator;
 import de.dk.util.PeekableIterator;
+import de.dk.util.StringUtils;
 
 /**
  * A class to parse command line arguments and options.
@@ -90,11 +92,15 @@ public class ArgumentParser {
     * @throws UnexpectedOptionValueException If an option value for an option that doesn't expect any value was supplied
     * e.g. If an option <code>[-f --foo]</code> is just intended as a simple flag, that doesn't expect any value
     * is given like <code>--foo=bar</code>
+    * @throws IllegalArgumentException  if <code>args</code> is <code>null</code> or empty.
+    * @throws InvalidOptionFormatException If a token with multiple options in it contains an option,
+    * that expects a value and is not the last char of the token, e.g. <code>-abc</code> is given
+    * where option <code>a</code> expects a value
     */
    public ArgumentModel parseArguments(int offset, String... args) throws MissingArgumentException,
                                                                           MissingOptionValueException,
                                                                           UnknownArgumentException,
-                                                                          UnexpectedOptionValueException {
+                                                                          UnexpectedOptionValueException, InvalidOptionFormatException, IllegalArgumentException {
       return parseArguments(ArrayIterator.of(offset, args.length - offset, args));
    }
 
@@ -114,11 +120,17 @@ public class ArgumentParser {
     * that doesn't expect any value was supplied e.g. If an option <code>[-f --foo]</code>
     * is just intended as a simple flag, that doesn't expect any value
     * is given like <code>--foo=bar</code>
+    * @throws IllegalArgumentException  if <code>args</code> is <code>null</code> or empty.
+    * @throws InvalidOptionFormatException If a token with multiple options in it contains an option,
+    * that expects a value and is not the last char of the token, e.g. <code>-abc</code> is given
+    * where option <code>a</code> expects a value
     */
    public ArgumentModel parseArguments(String... args) throws MissingArgumentException,
                                                               MissingOptionValueException,
                                                               UnknownArgumentException,
-                                                              UnexpectedOptionValueException {
+                                                              UnexpectedOptionValueException,
+                                                              InvalidOptionFormatException,
+                                                              IllegalArgumentException {
       return parseArguments(ArrayIterator.of(args));
    }
 
@@ -140,11 +152,15 @@ public class ArgumentParser {
     * that doesn't expect any value was supplied
     * e.g. If an option <code>[-f --foo]</code> is just intended as a simple flag,
     * that doesn't expect any value is given like <code>--foo=bar</code>
+    * @throws InvalidOptionFormatException If a token with multiple options in it contains an option,
+    * that expects a value and is not the last char of the token, e.g. <code>-abc</code> is given
+    * where option <code>a</code> expects a value
     */
    public ArgumentModel parseArguments(PeekableIterator<String> iterator) throws MissingArgumentException,
                                                                                  MissingOptionValueException,
                                                                                  UnknownArgumentException,
-                                                                                 UnexpectedOptionValueException {
+                                                                                 UnexpectedOptionValueException,
+                                                                                 InvalidOptionFormatException {
       return parseArguments(iterator, createModelBuilder());
    }
 
@@ -152,7 +168,8 @@ public class ArgumentParser {
                                           ArgumentModelBuilder builder) throws MissingArgumentException,
                                                                                MissingOptionValueException,
                                                                                UnknownArgumentException,
-                                                                               UnexpectedOptionValueException {
+                                                                               UnexpectedOptionValueException,
+                                                                               InvalidOptionFormatException {
       String arg = null;
       try {
          while (iterator.hasNext()) {
@@ -194,7 +211,8 @@ public class ArgumentParser {
    private static ExpectedOption handleOption(String arg,
                                               ArgumentModelBuilder builder) throws MissingOptionValueException,
                                                                                    NoSuchElementException,
-                                                                                   UnexpectedOptionValueException {
+                                                                                   UnexpectedOptionValueException,
+                                                                                   InvalidOptionFormatException {
       ExpectedOption result = null;
 
       // long options e.g. '--longOpt'
@@ -226,7 +244,7 @@ public class ArgumentParser {
 
             result.setPresent(true);
             if (result.expectsValue() && i + 1 < arg.length())
-               throw new MissingOptionValueException(result);
+               throw new InvalidOptionFormatException(arg, key);
          }
       // Can only be '-'
       } else {
@@ -330,7 +348,8 @@ public class ArgumentParser {
       for (ExpectedArgument arg : allArguments) {
          out.println();
          out.println(arg.fullName());
-         out.println(arg.getDescription());
+         if (!StringUtils.isBlank(arg.getDescription()))
+            out.println(arg.getDescription());
       }
    }
 
@@ -342,9 +361,9 @@ public class ArgumentParser {
    public synchronized String syntax() {
       StringBuilder builder = new StringBuilder();
       for (ExpectedArgument arg : allArguments) {
-         if (arg.isMandatory()) {
+         if (arg.isOption()) {
             builder.append(arg.fullName())
-                   .append(" ");
+                   .append(' ');
          } else {
             builder.append('[')
                    .append(arg.fullName())

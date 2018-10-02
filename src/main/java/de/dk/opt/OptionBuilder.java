@@ -93,21 +93,6 @@ public class OptionBuilder {
    }
 
    /**
-    * Makes the option mandatory. By default options are optional (not mandatory).
-    * If an option is mandatory, the argumentparser is throwing a <code>MissingArgumentException</code>
-    * if the option is not present.<br>
-    * Note: A mandatory option is always expecting a value after it!
-    *
-    * @param mandatory Determines if the option is mandatory or not.
-    *
-    * @return This option builder to go on
-    */
-   public OptionBuilder setMandatory(boolean mandatory) {
-      option.setMandatory(mandatory);
-      return this;
-   }
-
-   /**
     * Set the description of the option.
     *
     * @param description The description of the option

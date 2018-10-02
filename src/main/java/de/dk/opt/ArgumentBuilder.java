@@ -30,17 +30,6 @@ public interface ArgumentBuilder {
    public ExpectedArgument buildAndGet() throws IllegalStateException;
 
    /**
-    * Makes the argument mandatory.
-    * If an argument is mandatory, the argumentparser is throwing a <code>MissingArgumentException</code>
-    * if the argument is not present.
-    *
-    * @param mandatory Determines if the argument is mandatory or not.
-    *
-    * @return This argument builder to go on
-    */
-   public ArgumentBuilder setMandatory(boolean mandatory);
-
-   /**
     * Set a description of the argument. This description can be printed for the user to help him.
     *
     * @param description The description of the argument
