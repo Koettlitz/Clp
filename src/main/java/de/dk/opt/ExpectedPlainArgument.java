@@ -2,30 +2,32 @@ package de.dk.opt;
 
 import java.util.Objects;
 
+import de.dk.util.StringUtils;
+
 /**
  * @author David Koettlitz
  * <br>Erstellt am 07.08.2017
  */
 public class ExpectedPlainArgument implements ExpectedArgument, Cloneable {
-   private final short index;
+   private final int index;
    private final String name;
    private boolean mandatory;
    private String description;
 
    private String value;
 
-   public ExpectedPlainArgument(short index, String name, boolean mandatory, String description) throws NullPointerException {
+   public ExpectedPlainArgument(int index, String name, boolean mandatory, String description) throws NullPointerException {
       this.index = index;
       this.name = Objects.requireNonNull(name);
       this.mandatory = mandatory;
-      this.description = description;
+      setDescription(description);
    }
 
-   protected ExpectedPlainArgument(short index, String name) throws NullPointerException {
+   protected ExpectedPlainArgument(int index, String name) throws NullPointerException {
       this(index, name, true, null);
    }
 
-   public ExpectedPlainArgument(short index, String name, String description) throws NullPointerException {
+   public ExpectedPlainArgument(int index, String name, String description) throws NullPointerException {
       this(index, name, true, description);
    }
 
@@ -38,7 +40,7 @@ public class ExpectedPlainArgument implements ExpectedArgument, Cloneable {
    }
 
    @Override
-   public short getIndex() {
+   public int getIndex() {
       return index;
    }
 
@@ -47,6 +49,7 @@ public class ExpectedPlainArgument implements ExpectedArgument, Cloneable {
       return name;
    }
 
+   @Override
    public boolean isMandatory() {
       return mandatory;
    }
@@ -61,7 +64,7 @@ public class ExpectedPlainArgument implements ExpectedArgument, Cloneable {
    }
 
    public void setDescription(String description) {
-      this.description = description;
+      this.description = StringUtils.isBlank(description) ? null : description;
    }
 
    @Override

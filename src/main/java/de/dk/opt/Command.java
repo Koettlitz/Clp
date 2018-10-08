@@ -1,6 +1,11 @@
 package de.dk.opt;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * @author David Koettlitz
@@ -8,25 +13,42 @@ import java.util.Objects;
  */
 public class Command implements ExpectedArgument, Cloneable {
    private String name;
-   private final short index;
+   private final int index;
    private String description;
+   private boolean mandatory;
+   private Set<Command> alternatives;
    private ArgumentModel value;
    private ArgumentParser parser;
 
-   public Command(short index, String name, String description, ArgumentParser parser) throws NullPointerException {
+   public Command(int index, String name, String description, ArgumentParser parser) throws NullPointerException {
       this.index = index;
       this.name = Objects.requireNonNull(name);
       this.description = description;
       this.parser = Objects.requireNonNull(parser);
    }
 
-   public Command(short index, String name, ArgumentParser parser) throws NullPointerException {
+   public Command(int index, String name, ArgumentParser parser) throws NullPointerException {
       this(index, name, null, parser);
    }
 
-   Command(short index, String name) throws NullPointerException {
+   Command(int index, String name) throws NullPointerException {
       this.index = index;
       this.name = Objects.requireNonNull(name);
+   }
+
+   static Set<Command> cloneAll(Command command) {
+      Collection<Command> alternatives = command.getAlternatives();
+      if (alternatives.isEmpty())
+         return new HashSet<>(Arrays.asList(command.clone()));
+
+      Set<Command> result = new HashSet<>();
+      for (Command cmd : command.getAlternatives()) {
+         Command clone = cmd.clone();
+         clone.alternatives = result;
+         result.add(clone);
+      }
+
+      return result;
    }
 
    @Override
@@ -57,7 +79,7 @@ public class Command implements ExpectedArgument, Cloneable {
    }
 
    @Override
-   public short getIndex() {
+   public int getIndex() {
       return index;
    }
 
@@ -70,12 +92,34 @@ public class Command implements ExpectedArgument, Cloneable {
       this.description = description;
    }
 
+   public void setMandatory(boolean mandatory) {
+      this.mandatory = mandatory;
+   }
+
+   @Override
+   public boolean isMandatory() {
+      return mandatory;
+   }
+
    public ArgumentModel getValue() {
       return value;
    }
 
-   public void setValue(ArgumentModel value) {
+   void setValue(ArgumentModel value) {
       this.value = value;
+   }
+
+   public Set<Command> getAlternatives() {
+      return alternatives == null ? Collections.emptySet() : alternatives;
+   }
+
+   void setAlternatives(Set<Command> alternatives) {
+      this.alternatives = alternatives;
+   }
+
+   public void alternative(Command alternative) {
+      alternatives.add(alternative);
+      alternative.alternatives.add(this);
    }
 
    @Override
@@ -85,13 +129,11 @@ public class Command implements ExpectedArgument, Cloneable {
 
    @Override
    public Command clone() {
-      try {
-         return (Command) super.clone();
-      } catch (CloneNotSupportedException e) {
-         String msg = "Error cloning this Command. "
-                      + "This error should never occur.";
-         throw new Error(msg, e);
-      }
+      Command clone = new Command(index, name);
+      clone.description = description;
+      clone.mandatory = mandatory;
+      clone.parser = parser;
+      return clone;
    }
 
    @Override

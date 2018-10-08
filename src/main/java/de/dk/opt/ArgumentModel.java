@@ -45,7 +45,7 @@ public class ArgumentModel implements Iterable<String> {
     *
     * @param name The name of the argument
     *
-    * @return The value of the argument of <code>null</code> if the argument
+    * @return The value of the argument or <code>null</code> if the argument
     * <code>name</code> was not specified.
     */
    public String getArgumentValue(String name) {

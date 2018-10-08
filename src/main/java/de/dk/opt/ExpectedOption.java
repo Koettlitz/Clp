@@ -9,7 +9,7 @@ import de.dk.util.StringUtils;
 public class ExpectedOption implements ExpectedArgument, Cloneable {
    public final static char NO_KEY = '\0';
 
-   private final short index;
+   private final int index;
    private char key;
    private String longKey;
    private boolean expectsValue;
@@ -18,25 +18,25 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
    private String value;
    private boolean present;
 
-   public ExpectedOption(short index,
+   public ExpectedOption(int index,
                          char key,
                          String longKey,
                          String description) {
       this.index = index;
       this.key = key;
-      this.longKey = longKey;
-      this.description = description;
+      setLongKey(longKey);
+      setDescription(description);
    }
 
-   public ExpectedOption(short index, char key, String description) {
+   public ExpectedOption(int index, char key, String description) {
       this(index, key, null, description);
    }
 
-   public ExpectedOption(short index, char key) {
+   public ExpectedOption(int index, char key) {
       this(index, key, null);
    }
 
-   public ExpectedOption(short index, String longKey) {
+   public ExpectedOption(int index, String longKey) {
       this(index, NO_KEY, longKey, null);
    }
 
@@ -52,7 +52,12 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
    }
 
    public void setDescription(String description) {
-      this.description = description;
+      this.description = StringUtils.isBlank(description) ? null : description;
+   }
+
+   @Override
+   public boolean isMandatory() {
+      return false;
    }
 
    @Override
@@ -89,7 +94,7 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
    }
 
    @Override
-   public short getIndex() {
+   public int getIndex() {
       return index;
    }
 

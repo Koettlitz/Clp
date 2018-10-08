@@ -2,6 +2,7 @@ package de.dk.opt;
 
 import static de.dk.opt.ExpectedOption.NO_KEY;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,7 +11,9 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import de.dk.opt.ex.InvalidOptionFormatException;
 import de.dk.opt.ex.MissingArgumentException;
@@ -30,12 +33,11 @@ public class ArgumentModelBuilder {
    private final Map<Character, ExpectedOption> options;
    private final Map<String, ExpectedOption> longOptions;
    private final Map<String, Command> commands;
-   private final List<ExpectedArgument> mandatories;
+   private final Set<ExpectedArgument> mandatories;
 
    private boolean minusMinusPresent = false;
 
    private int plainArgIndex;
-   private boolean allMandatoriesPresent;
 
    /**
     * Create a new argumentmodel builder with plain arguments, options and long options.
@@ -56,9 +58,10 @@ public class ArgumentModelBuilder {
       this.longOptions = Objects.requireNonNull(longOptions);
       this.commands = commands == null ? new HashMap<>(0) : commands;
       this.plainArgIndex = plainArgIndex;
-      this.mandatories = arguments.stream()
-                                  .filter(ExpectedPlainArgument::isMandatory)
-                                  .collect(Collectors.toList());
+      this.mandatories = Stream.of(arguments, commands.values())
+                               .flatMap(Collection::stream)
+                               .filter(ExpectedArgument::isMandatory)
+                               .collect(Collectors.toSet());
    }
 
    /**
@@ -172,10 +175,8 @@ public class ArgumentModelBuilder {
     * @return <code>true</code> if all mandatory arguments are present, <code>false</code> otherwise.
     */
    public boolean allMandatoriesPresent() {
-      if (!allMandatoriesPresent)
-         mandatories.removeIf(ExpectedArgument::isPresent);
-
-      return (allMandatoriesPresent = mandatories.isEmpty());
+      mandatories.removeIf(ExpectedArgument::isPresent);
+      return mandatories.isEmpty();
    }
 
    /**
@@ -183,7 +184,7 @@ public class ArgumentModelBuilder {
     *
     * @return all expected args
     */
-   public List<ExpectedPlainArgument> getArguments() {
+   public Iterable<ExpectedPlainArgument> getArguments() {
       return arguments;
    }
 
@@ -210,7 +211,7 @@ public class ArgumentModelBuilder {
     *
     * @return all the mandatory args
     */
-   public List<ExpectedArgument> getMandatories() {
+   public Iterable<ExpectedArgument> getMandatories() {
       return mandatories;
    }
 
@@ -292,7 +293,13 @@ public class ArgumentModelBuilder {
     * @return <code>true</code> if the command <code>name</code> is expected, <code>false</code> otherwise.
     */
    public boolean expectsCommand(String name) {
-      return commands.containsKey(name);
+      Command cmd = commands.get(name);
+      if (cmd == null)
+         return false;
+
+      return !cmd.getAlternatives()
+                 .stream()
+                 .anyMatch(Command::isPresent);
    }
 
    /**

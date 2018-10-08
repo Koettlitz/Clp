@@ -10,10 +10,11 @@ package de.dk.opt;
  * @see ArgumentParserBuilder
  */
 public interface ExpectedArgument extends Comparable<ExpectedArgument> {
-   public short getIndex();
+   public int getIndex();
    public String getName();
    public String fullName();
    public String getDescription();
+   public boolean isMandatory();
    public boolean isPresent();
    public boolean isOption();
    public ExpectedArgument clone();

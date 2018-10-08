@@ -21,7 +21,10 @@ public interface ArgumentBuilder {
 
    /**
     * Builds the argument and passes it to the parent argumentparser builder.
-    * It is recommended to use the {@link ArgumentBuilder#build()} method instead.
+    * This method is rarely needed, because the returned argument is usually not
+    * useful nor nessecary for the user of this API.
+    * It is recommended to use the {@link ArgumentBuilder#build()} method instead
+    * that returns the ArgumentParserBuilder from which this ArgumentBuilder was created.
     *
     * @return The built argument.
     *

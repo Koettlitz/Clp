@@ -1,7 +1,5 @@
 package de.dk.opt.ex;
 
-import java.util.List;
-
 import de.dk.opt.ExpectedArgument;
 
 /**
@@ -13,14 +11,14 @@ import de.dk.opt.ExpectedArgument;
 public class MissingArgumentException extends ArgumentParseException {
    private static final long serialVersionUID = 1L;
 
-   private final List<? extends ExpectedArgument> missingArguments;
+   private final Iterable<? extends ExpectedArgument> missingArguments;
 
-   public MissingArgumentException(List<? extends ExpectedArgument> missingArguments) {
+   public MissingArgumentException(Iterable<? extends ExpectedArgument> missingArguments) {
       super(createMessage(missingArguments));
       this.missingArguments = missingArguments;
    }
 
-   private static String createMessage(List<? extends ExpectedArgument> missingArguments) {
+   private static String createMessage(Iterable<? extends ExpectedArgument> missingArguments) {
       StringBuilder builder = new StringBuilder("Missing Arguments:");
       for (ExpectedArgument arg : missingArguments) {
          builder.append(" <")
@@ -31,7 +29,7 @@ public class MissingArgumentException extends ArgumentParseException {
       return builder.toString();
    }
 
-   public List<? extends ExpectedArgument> getMissingArguments() {
+   public Iterable<? extends ExpectedArgument> getMissingArguments() {
       return missingArguments;
    }
 

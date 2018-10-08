@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import de.dk.opt.ex.InvalidOptionFormatException;
@@ -47,10 +48,10 @@ public class ArgumentParser {
    private final Map<String, ExpectedOption> longOptions;
    private final Map<String, Command> commands;
 
-   private ExpectedArgument[] allArguments;
+   private final ExpectedArgument[] allArguments;
 
    private Collection<String> helpArgs = new LinkedList<>(Arrays.asList(DEFAULT_HELP_ARGS));
-   private boolean ignoreUnknown = false;
+   private boolean ignoreUnknown;
 
    public ArgumentParser(List<ExpectedPlainArgument> arguments,
                          Map<Character, ExpectedOption> options,
@@ -285,10 +286,13 @@ public class ArgumentParser {
       }
 
       Map<String, Command> commands = this.commands
-                                          .entrySet()
+                                          .values()
                                           .stream()
-                                          .collect(toMap(Entry::getKey,
-                                                         e -> e.getValue().clone()));
+                                          .map(Command::cloneAll)
+                                          .flatMap(Collection::stream)
+                                          .distinct()
+                                          .collect(toMap(Command::getName,
+                                                         UnaryOperator.identity()));
 
       if (!options.containsKey('-')) {
          options.put('-', new ExpectedOption(count,
@@ -361,9 +365,9 @@ public class ArgumentParser {
    public synchronized String syntax() {
       StringBuilder builder = new StringBuilder();
       for (ExpectedArgument arg : allArguments) {
-         if (arg.isOption()) {
+         if (arg.isMandatory()) {
             builder.append(arg.fullName())
-                   .append(' ');
+                   .append(" ");
          } else {
             builder.append('[')
                    .append(arg.fullName())

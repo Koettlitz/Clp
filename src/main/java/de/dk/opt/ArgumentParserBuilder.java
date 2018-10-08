@@ -1,6 +1,7 @@
 package de.dk.opt;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,7 @@ public class ArgumentParserBuilder {
 
    private CommandBuilder parentBuilder;
    private boolean ignoreUnknown;
+   private String[] helpArgs;
 
    private short argCount;
 
@@ -92,6 +94,9 @@ public class ArgumentParserBuilder {
    public ArgumentParser buildAndGet() {
       ArgumentParser parser = new ArgumentParser(arguments, options, longOptions, commands);
       parser.setIgnoreUnknown(ignoreUnknown);
+      if (helpArgs != null)
+         parser.setHelpArgs(Arrays.asList(helpArgs));
+
       if (parentBuilder != null)
          parentBuilder.setParser(parser);
 
@@ -200,7 +205,6 @@ public class ArgumentParserBuilder {
     * @return An option builder that will be a child builder of this builder
     */
    public OptionBuilder buildOption(char key) {
-
       return new OptionBuilder(this, argCount++, key);
    }
 
@@ -213,7 +217,6 @@ public class ArgumentParserBuilder {
     * @return An option builder that will be a child builder of this builder
     */
    public OptionBuilder buildOption(String longKey) {
-
       return new OptionBuilder(this, argCount++, longKey);
    }
 
@@ -275,6 +278,25 @@ public class ArgumentParserBuilder {
    }
 
    /**
+    * Creates a new command builder to build a command.
+    * The build method of that command builder will return this argumentparser builder again.
+    *
+    * @param name The name of the command
+    *
+    * @return A command builder that will be a child builder of this builder
+    *
+    * @throws NullPointerException If the given <code>name</code> is <code>null</code>
+    */
+   public CommandBuilder buildCommand(String name) throws NullPointerException {
+      return new CommandBuilder(this, argCount++, name);
+   }
+
+   protected ArgumentParserBuilder addCommand(Command command) {
+      commands.put(command.getName(), command);
+      return this;
+   }
+
+   /**
     * Set whether unknown/unexpected arguments should be ignored
     * or an Exception should be thrown.
     * If set to <code>true</code>, any of the <code>parseArguments</code>
@@ -301,22 +323,8 @@ public class ArgumentParserBuilder {
       return setIgnoreUnknown(true);
    }
 
-   /**
-    * Creates a new command builder to build a command.
-    * The build method of that command builder will return this argumentparser builder again.
-    *
-    * @param name The name of the command
-    *
-    * @return A command builder that will be a child builder of this builder
-    *
-    * @throws NullPointerException If the given <code>name</code> is <code>null</code>
-    */
-   public CommandBuilder buildCommand(String name) throws NullPointerException {
-      return new CommandBuilder(this, argCount++, name);
-   }
-
-   protected ArgumentParserBuilder addCommand(Command command) {
-      commands.put(command.getName(), command);
+   public ArgumentParserBuilder setHelpArgs(String... helpArgs) {
+      this.helpArgs = helpArgs;
       return this;
    }
 }

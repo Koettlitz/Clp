@@ -10,10 +10,9 @@ import java.util.Iterator;
 
 import org.junit.jupiter.api.Test;
 
+import de.dk.opt.ex.ArgumentParseException;
 import de.dk.opt.ex.InvalidOptionFormatException;
 import de.dk.opt.ex.MissingArgumentException;
-import de.dk.opt.ex.MissingOptionValueException;
-import de.dk.opt.ex.UnexpectedOptionValueException;
 import de.dk.opt.ex.UnknownArgumentException;
 
 /**
@@ -36,6 +35,7 @@ public class ArgumentParserTest {
    private static final String OPT_VALUE2 = "#d.#m.YYYY";
 
    private static final String CMD_NAME0 = "run";
+   private static final String CMD_NAME1 = "get";
 
    public ArgumentParserTest() {
 
@@ -44,11 +44,7 @@ public class ArgumentParserTest {
    private static ArgumentModel parse(ArgumentParser parser, String... args) {
       try {
          return parser.parseArguments(args);
-      } catch (MissingArgumentException |
-               MissingOptionValueException |
-               UnknownArgumentException |
-               UnexpectedOptionValueException |
-               InvalidOptionFormatException |
+      } catch (ArgumentParseException |
                IllegalArgumentException e) {
          fail(e.getMessage());
       }
@@ -389,6 +385,47 @@ public class ArgumentParserTest {
    }
 
    @Test
+   public void additionalAlternativeCommandThrowsException() {
+      ArgumentParser parser = ArgumentParserBuilder.begin()
+                                                   .buildCommand(CMD_NAME0)
+                                                      .buildAndNextAlternative(CMD_NAME1)
+                                                      .build()
+                                                   .buildAndGet();
+
+      assertThrows(UnknownArgumentException.class, () -> parser.parseArguments(CMD_NAME0, CMD_NAME1));
+   }
+
+   @Test
+   public void additionalAlternativeCommandNotPresent() {
+      ArgumentParser parser = ArgumentParserBuilder.begin()
+                                                   .setIgnoreUnknown(true)
+                                                   .buildCommand(CMD_NAME0)
+                                                      .buildAndNextAlternative(CMD_NAME1)
+                                                      .build()
+                                                   .buildAndGet();
+
+      ArgumentModel result = parse(parser, CMD_NAME0, CMD_NAME1);
+
+      assertTrue(result.getCommandValue(CMD_NAME0) != null, "First command should be present");
+      assertTrue(result.getCommandValue(CMD_NAME1) == null, "Second command should not be present");
+   }
+
+   @Test
+   public void additionalAlternativeCommandIsTreatedAsPlainArgument() {
+      ArgumentParser parser = ArgumentParserBuilder.begin()
+                                                   .buildCommand(CMD_NAME0)
+                                                      .buildAndNextAlternative(CMD_NAME1)
+                                                      .build()
+                                                   .addArgument(ARG_NAME0)
+                                                   .buildAndGet();
+
+      ArgumentModel result = parse(parser, CMD_NAME1, CMD_NAME0);
+
+      assertTrue(result.getCommandValue(CMD_NAME1) != null, "Command should be present.");
+      assertEquals(CMD_NAME0, result.getArgumentValue(ARG_NAME0));
+   }
+
+   @Test
    public void syntaxIsCreatedCorrectly() {
       String expected = String.format("<%s> [<%s>] [-%s <%s>] [--%s] [--%s=<%s>]",
                                       ARG_NAME0,
@@ -397,7 +434,8 @@ public class ArgumentParserTest {
                                       "loong",
                                       OPT_LONG_KEY1,
                                       OPT_LONG_KEY2,
-                                      OPT_LONG_KEY2);
+                                      OPT_LONG_KEY2,
+                                      CMD_NAME0);
 
       ArgumentParser parser = ArgumentParserBuilder.begin()
                                                    .addArgument(ARG_NAME0)
