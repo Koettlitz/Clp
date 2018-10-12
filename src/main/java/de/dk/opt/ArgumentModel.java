@@ -1,10 +1,12 @@
 package de.dk.opt;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+
+import de.dk.util.Util;
 
 /**
  * Represents parsed arguments. This class is implementing the <code>Iterable</code> interface
@@ -17,7 +19,7 @@ import java.util.Optional;
  * @see ArgumentParserBuilder
  */
 public class ArgumentModel implements Iterable<String> {
-   private final LinkedHashMap<String, ExpectedPlainArgument> arguments;
+   private final Map<String, ExpectedPlainArgument> arguments;
    private final Map<Character, ExpectedOption> options;
    private final Map<String, ExpectedOption> longOptions;
    private final Map<String, Command> commands;
@@ -34,10 +36,10 @@ public class ArgumentModel implements Iterable<String> {
                         Map<Character, ExpectedOption> options,
                         Map<String, ExpectedOption> longOptions,
                         Map<String, Command> commands) {
-      this.arguments = Objects.requireNonNull(arguments);
-      this.options = Objects.requireNonNull(options);
-      this.longOptions = longOptions;
-      this.commands = Objects.requireNonNull(commands);
+      this.arguments = Util.nonNull(arguments, Collections::emptySortedMap);
+      this.options = Util.nonNull(options, Collections::emptySortedMap);
+      this.longOptions = Util.nonNull(longOptions, Collections::emptySortedMap);;
+      this.commands = Util.nonNull(commands, Collections::emptySortedMap);
    }
 
    /**

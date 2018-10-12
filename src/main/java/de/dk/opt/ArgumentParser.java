@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,6 +26,7 @@ import de.dk.opt.ex.UnknownArgumentException;
 import de.dk.util.ArrayIterator;
 import de.dk.util.PeekableIterator;
 import de.dk.util.StringUtils;
+import de.dk.util.Util;
 
 /**
  * A class to parse command line arguments and options.
@@ -57,15 +59,15 @@ public class ArgumentParser {
                          Map<Character, ExpectedOption> options,
                          Map<String, ExpectedOption> longOptions,
                          Map<String, Command> commands) {
-      this.arguments = Objects.requireNonNull(arguments);
-      this.options = Objects.requireNonNull(options);
-      this.longOptions = Objects.requireNonNull(longOptions);
-      this.commands = commands == null ? new HashMap<>(0) : commands;
+      this.arguments = Util.nonNull(arguments, Collections::emptyList);
+      this.options = Util.nonNull(options, Collections::emptyMap);
+      this.longOptions = Util.nonNull(longOptions, Collections::emptyMap);
+      this.commands = Util.nonNull(commands, Collections::emptyMap);
 
-      this.allArguments = Stream.of(arguments,
-                                    options.values(),
-                                    longOptions.values(),
-                                    commands.values())
+      this.allArguments = Stream.of(this.arguments,
+                                    this.options.values(),
+                                    this.longOptions.values(),
+                                    this.commands.values())
                                 .flatMap(Collection::stream)
                                 .sorted((a, b) -> a.getIndex() - b.getIndex())
                                 .distinct()

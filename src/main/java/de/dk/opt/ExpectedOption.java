@@ -7,7 +7,7 @@ import de.dk.util.StringUtils;
  * <br>Erstellt am 07.08.2017
  */
 public class ExpectedOption implements ExpectedArgument, Cloneable {
-   public final static char NO_KEY = '\0';
+   public static final char NO_KEY = '\0';
 
    private final int index;
    private char key;

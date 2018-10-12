@@ -13,7 +13,6 @@ package de.dk.opt;
  */
 public class OptionBuilder {
    private final ArgumentParserBuilder parentBuilder;
-
    private final ExpectedOption option;
 
    /**

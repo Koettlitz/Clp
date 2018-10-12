@@ -2,7 +2,7 @@ package de.dk.opt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,10 +57,10 @@ import java.util.Map;
  * <br>Erstellt am 24.07.2017
  */
 public class ArgumentParserBuilder {
-   private List<ExpectedPlainArgument> arguments = new ArrayList<>();
-   private Map<Character, ExpectedOption> options = new LinkedHashMap<>();
-   private Map<String, ExpectedOption> longOptions = new LinkedHashMap<>();
-   private Map<String, Command> commands = new LinkedHashMap<>(0);
+   private List<ExpectedPlainArgument> arguments;
+   private Map<Character, ExpectedOption> options;
+   private Map<String, ExpectedOption> longOptions;
+   private Map<String, Command> commands;
 
    private CommandBuilder parentBuilder;
    private boolean ignoreUnknown;
@@ -192,6 +192,9 @@ public class ArgumentParserBuilder {
     * @return This argumentparser builder to go on
     */
    protected ArgumentParserBuilder addArgument(ExpectedPlainArgument argument) {
+      if (arguments == null)
+         arguments = new ArrayList<>();
+
       arguments.add(argument);
       return this;
    }
@@ -269,10 +272,19 @@ public class ArgumentParserBuilder {
     * @return This argumentparser builder to go on
     */
    protected ArgumentParserBuilder addOption(ExpectedOption option) {
-      if (option.getKey() != ExpectedOption.NO_KEY || option.getLongKey() == null)
+      if (option.getKey() != ExpectedOption.NO_KEY || option.getLongKey() == null) {
+         if (options == null)
+            options = new HashMap<>();
+
          options.put(option.getKey(), option);
-      if (option.getLongKey() != null)
+      }
+
+      if (option.getLongKey() != null) {
+         if (longOptions == null)
+            longOptions = new HashMap<>();
+
          longOptions.put(option.getLongKey(), option);
+      }
 
       return this;
    }
@@ -292,6 +304,9 @@ public class ArgumentParserBuilder {
    }
 
    protected ArgumentParserBuilder addCommand(Command command) {
+      if (commands == null)
+         commands = new HashMap<>();
+
       commands.put(command.getName(), command);
       return this;
    }
