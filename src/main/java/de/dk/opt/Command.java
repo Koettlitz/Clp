@@ -1,11 +1,6 @@
 package de.dk.opt;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * @author David Koettlitz
@@ -15,40 +10,30 @@ public class Command implements ExpectedArgument, Cloneable {
    private String name;
    private final int index;
    private String description;
-   private boolean mandatory;
-   private Set<Command> alternatives;
    private ArgumentModel value;
    private ArgumentParser parser;
+   private CommandGroup group;
 
-   public Command(int index, String name, String description, ArgumentParser parser) throws NullPointerException {
+   public Command(CommandGroup group,
+                  int index,
+                  String name,
+                  String description,
+                  ArgumentParser parser) throws NullPointerException {
+
+      this.group = group;
       this.index = index;
       this.name = Objects.requireNonNull(name);
       this.description = description;
       this.parser = Objects.requireNonNull(parser);
    }
 
-   public Command(int index, String name, ArgumentParser parser) throws NullPointerException {
-      this(index, name, null, parser);
+   public Command(CommandGroup group, int index, String name, ArgumentParser parser) throws NullPointerException {
+      this(group, index, name, null, parser);
    }
 
    Command(int index, String name) throws NullPointerException {
       this.index = index;
       this.name = Objects.requireNonNull(name);
-   }
-
-   static Set<Command> cloneAll(Command command) {
-      Collection<Command> alternatives = command.getAlternatives();
-      if (alternatives.isEmpty())
-         return new HashSet<>(Arrays.asList(command.clone()));
-
-      Set<Command> result = new HashSet<>();
-      for (Command cmd : command.getAlternatives()) {
-         Command clone = cmd.clone();
-         clone.alternatives = result;
-         result.add(clone);
-      }
-
-      return result;
    }
 
    @Override
@@ -92,13 +77,9 @@ public class Command implements ExpectedArgument, Cloneable {
       this.description = description;
    }
 
-   public void setMandatory(boolean mandatory) {
-      this.mandatory = mandatory;
-   }
-
    @Override
    public boolean isMandatory() {
-      return mandatory;
+      return group.isMandatory();
    }
 
    public ArgumentModel getValue() {
@@ -107,19 +88,11 @@ public class Command implements ExpectedArgument, Cloneable {
 
    void setValue(ArgumentModel value) {
       this.value = value;
+      group.setPresent(isPresent());
    }
 
-   public Set<Command> getAlternatives() {
-      return alternatives == null ? Collections.emptySet() : alternatives;
-   }
-
-   void setAlternatives(Set<Command> alternatives) {
-      this.alternatives = alternatives;
-   }
-
-   public void alternative(Command alternative) {
-      alternatives.add(alternative);
-      alternative.alternatives.add(this);
+   void setGroup(CommandGroup group) {
+      this.group = group;
    }
 
    @Override
@@ -131,7 +104,6 @@ public class Command implements ExpectedArgument, Cloneable {
    public Command clone() {
       Command clone = new Command(index, name);
       clone.description = description;
-      clone.mandatory = mandatory;
       clone.parser = parser;
       return clone;
    }

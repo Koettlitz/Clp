@@ -22,7 +22,7 @@ public class ArgumentModel implements Iterable<String> {
    private final Map<String, ExpectedPlainArgument> arguments;
    private final Map<Character, ExpectedOption> options;
    private final Map<String, ExpectedOption> longOptions;
-   private final Map<String, Command> commands;
+   private final Command command;
 
    /**
     * Creates a new argument model with argument and options.
@@ -30,16 +30,16 @@ public class ArgumentModel implements Iterable<String> {
     * @param arguments The arguments mapped by their names
     * @param options The options mapped by their key characters
     * @param longOptions The long options mapped by their long keys
-    * @param commands The commands mapped by their names
+    * @param command The provided command
     */
    public ArgumentModel(LinkedHashMap<String, ExpectedPlainArgument> arguments,
                         Map<Character, ExpectedOption> options,
                         Map<String, ExpectedOption> longOptions,
-                        Map<String, Command> commands) {
+                        Command command) {
       this.arguments = Util.nonNull(arguments, Collections::emptySortedMap);
       this.options = Util.nonNull(options, Collections::emptySortedMap);
       this.longOptions = Util.nonNull(longOptions, Collections::emptySortedMap);;
-      this.commands = Util.nonNull(commands, Collections::emptySortedMap);
+      this.command = command;
    }
 
    /**
@@ -163,12 +163,7 @@ public class ArgumentModel implements Iterable<String> {
      * @return The parsed argument model of the command or <code>null</code> if not present
      */
     public ArgumentModel getCommandValue(String name) {
-       if (commands == null)
-          return null;
-
-       return Optional.ofNullable(commands.get(name))
-                      .map(Command::getValue)
-                      .orElse(null);
+       return getOptionalCommandValue(name).orElse(null);
     }
 
     /**
@@ -179,7 +174,8 @@ public class ArgumentModel implements Iterable<String> {
      * @return An optional containing the parsed argument model of the command if present
      */
     public Optional<ArgumentModel> getOptionalCommandValue(String name) {
-       return Optional.ofNullable(commands.get(name))
+       return Optional.ofNullable(command)
+                      .filter(cmd -> cmd.getName().equals(name))
                       .map(Command::getValue);
     }
 
@@ -191,7 +187,8 @@ public class ArgumentModel implements Iterable<String> {
      * @return <code>true</code> if the command was given. <code>false</code> otherwise
      */
     public boolean isCommandPresent(String name) {
-       return Optional.ofNullable(commands.get(name))
+       return Optional.ofNullable(command)
+                      .filter(cmd -> cmd.getName().equals(name))
                       .map(ExpectedArgument::isPresent)
                       .orElse(false);
     }

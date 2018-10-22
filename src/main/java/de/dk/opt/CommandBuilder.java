@@ -1,7 +1,6 @@
 package de.dk.opt;
 
-import java.util.HashSet;
-import java.util.Set;
+import de.dk.util.Util;
 
 /**
  * @author David Koettlitz
@@ -9,8 +8,8 @@ import java.util.Set;
  */
 public class CommandBuilder implements ArgumentBuilder {
    private final ArgumentParserBuilder parentBuilder;
+   private CommandGroup group;
    private Command command;
-   private Set<Command> alternatives;
 
    /**
     * Creates a new argument builder that belongs to the given <code>parentBuilder</code>.
@@ -20,8 +19,9 @@ public class CommandBuilder implements ArgumentBuilder {
     * @param index The index of the argument it has in the order
     * @param name The name of the argument
     */
-   protected CommandBuilder(ArgumentParserBuilder parentBuilder, short index, String name) throws NullPointerException {
+   protected CommandBuilder(ArgumentParserBuilder parentBuilder, CommandGroup group, short index, String name) throws NullPointerException {
       this.parentBuilder = parentBuilder;
+      this.group = Util.nonNull(group, CommandGroup::new);
       this.command = new Command(index, name);
    }
 
@@ -33,7 +33,7 @@ public class CommandBuilder implements ArgumentBuilder {
     * @param name The name of the argument
     */
    protected CommandBuilder(short index, String name) {
-      this(null, index, name);
+      this(null, null, index, name);
    }
 
    /**
@@ -47,43 +47,15 @@ public class CommandBuilder implements ArgumentBuilder {
       if (command.getParser() == null)
          buildParser().build();
 
-      if (alternatives != null) {
-         alternatives.add(command);
-         command.setAlternatives(alternatives);
-      }
+      group.add(command);
 
-      return parentBuilder.addCommand(command);
+      return parentBuilder.setCommands(group);
    }
 
    @Override
    public Command buildAndGet() {
       build();
       return command;
-   }
-
-   /**
-    * Builds the command and adds it to the parent argumentparser builder
-    * this CommandBuilder was created from.<br>
-    * Afterwards a command builder is returned to build another command,
-    * that is an alternative command to the currently built command.
-    * The parent builder of the returned CommandBuilder will be the same as
-    * the parent builder of this CommandBuilder, so the {@link #build()}
-    * method of it will return the ArgumentParserBuilder this
-    * CommandBuilder was created from.
-    *
-    * @param name the name of the command to build next
-    *
-    * @return A commandbuilder to build another command,
-    * that is an alternative command to the currently built one
-    */
-   public CommandBuilder buildAndNextAlternative(String name) {
-      if (alternatives == null)
-         alternatives = new HashSet<>();
-
-      build();
-
-      this.command = new Command(command.getIndex() + 1, name);
-      return this;
    }
 
    @Override
@@ -117,7 +89,7 @@ public class CommandBuilder implements ArgumentBuilder {
    }
 
    public CommandBuilder setMandatory(boolean mandatory) {
-      command.setMandatory(mandatory);
+      group.setMandatory(mandatory);
       return this;
    }
 

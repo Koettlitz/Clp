@@ -388,7 +388,8 @@ public class ArgumentParserTest {
    public void additionalAlternativeCommandThrowsException() {
       ArgumentParser parser = ArgumentParserBuilder.begin()
                                                    .buildCommand(CMD_NAME0)
-                                                      .buildAndNextAlternative(CMD_NAME1)
+                                                      .build()
+                                                   .buildCommand(CMD_NAME1)
                                                       .build()
                                                    .buildAndGet();
 
@@ -400,7 +401,8 @@ public class ArgumentParserTest {
       ArgumentParser parser = ArgumentParserBuilder.begin()
                                                    .setIgnoreUnknown(true)
                                                    .buildCommand(CMD_NAME0)
-                                                      .buildAndNextAlternative(CMD_NAME1)
+                                                      .build()
+                                                   .buildCommand(CMD_NAME1)
                                                       .build()
                                                    .buildAndGet();
 
@@ -414,7 +416,8 @@ public class ArgumentParserTest {
    public void additionalAlternativeCommandIsTreatedAsPlainArgument() {
       ArgumentParser parser = ArgumentParserBuilder.begin()
                                                    .buildCommand(CMD_NAME0)
-                                                      .buildAndNextAlternative(CMD_NAME1)
+                                                      .build()
+                                                   .buildCommand(CMD_NAME1)
                                                       .build()
                                                    .addArgument(ARG_NAME0)
                                                    .buildAndGet();

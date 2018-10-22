@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import de.dk.opt.ex.InvalidOptionFormatException;
@@ -48,7 +47,7 @@ public class ArgumentParser {
    private final List<ExpectedPlainArgument> arguments;
    private final Map<Character, ExpectedOption> options;
    private final Map<String, ExpectedOption> longOptions;
-   private final Map<String, Command> commands;
+   private final CommandGroup commands;
 
    private final ExpectedArgument[] allArguments;
 
@@ -58,16 +57,16 @@ public class ArgumentParser {
    public ArgumentParser(List<ExpectedPlainArgument> arguments,
                          Map<Character, ExpectedOption> options,
                          Map<String, ExpectedOption> longOptions,
-                         Map<String, Command> commands) {
+                         CommandGroup commands) {
       this.arguments = Util.nonNull(arguments, Collections::emptyList);
       this.options = Util.nonNull(options, Collections::emptyMap);
       this.longOptions = Util.nonNull(longOptions, Collections::emptyMap);
-      this.commands = Util.nonNull(commands, Collections::emptyMap);
+      this.commands = commands;
 
       this.allArguments = Stream.of(this.arguments,
                                     this.options.values(),
                                     this.longOptions.values(),
-                                    this.commands.values())
+                                    commands == null ? Collections.<Command>emptySet() : commands.asCollection())
                                 .flatMap(Collection::stream)
                                 .sorted((a, b) -> a.getIndex() - b.getIndex())
                                 .distinct()
@@ -273,7 +272,7 @@ public class ArgumentParser {
                                                    .collect(toMap(Entry::getKey,
                                                                   e -> e.getValue().clone()));
 
-      short count = (short) (arguments.size() + options.size() + commands.size());
+      short count = (short) (arguments.size() + options.size() + (commands == null ? 0 : 1));
 
       Map<String, ExpectedOption> longOptions = new HashMap<>();
       for (Entry<String, ExpectedOption> e : this.longOptions.entrySet()) {
@@ -287,14 +286,7 @@ public class ArgumentParser {
          }
       }
 
-      Map<String, Command> commands = this.commands
-                                          .values()
-                                          .stream()
-                                          .map(Command::cloneAll)
-                                          .flatMap(Collection::stream)
-                                          .distinct()
-                                          .collect(toMap(Command::getName,
-                                                         UnaryOperator.identity()));
+      CommandGroup commands = this.commands == null ? null : this.commands.clone();
 
       if (!options.containsKey('-')) {
          options.put('-', new ExpectedOption(count,
@@ -367,6 +359,9 @@ public class ArgumentParser {
    public synchronized String syntax() {
       StringBuilder builder = new StringBuilder();
       for (ExpectedArgument arg : allArguments) {
+         if (arg instanceof Command)
+            continue;
+
          if (arg.isMandatory()) {
             builder.append(arg.fullName())
                    .append(" ");
@@ -376,9 +371,18 @@ public class ArgumentParser {
                    .append("] ");
          }
       }
+      if (commands != null) {
+         if (commands.isMandatory()) {
+            builder.append(commands.fullName());
+         } else {
+            builder.append('[')
+                   .append(commands.fullName())
+                   .append(']');
+         }
+      }
 
       return builder.toString()
-                   .trim();
+                    .trim();
    }
 
    /**

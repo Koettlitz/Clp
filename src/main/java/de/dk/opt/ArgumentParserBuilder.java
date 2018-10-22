@@ -60,7 +60,7 @@ public class ArgumentParserBuilder {
    private List<ExpectedPlainArgument> arguments;
    private Map<Character, ExpectedOption> options;
    private Map<String, ExpectedOption> longOptions;
-   private Map<String, Command> commands;
+   private CommandGroup commands;
 
    private CommandBuilder parentBuilder;
    private boolean ignoreUnknown;
@@ -300,14 +300,11 @@ public class ArgumentParserBuilder {
     * @throws NullPointerException If the given <code>name</code> is <code>null</code>
     */
    public CommandBuilder buildCommand(String name) throws NullPointerException {
-      return new CommandBuilder(this, argCount++, name);
+      return new CommandBuilder(this, commands, argCount++, name);
    }
 
-   protected ArgumentParserBuilder addCommand(Command command) {
-      if (commands == null)
-         commands = new HashMap<>();
-
-      commands.put(command.getName(), command);
+   protected ArgumentParserBuilder setCommands(CommandGroup commands) {
+      this.commands = commands;
       return this;
    }
 

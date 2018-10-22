@@ -3,7 +3,7 @@ package de.dk.opt;
 import static de.dk.opt.ExpectedOption.NO_KEY;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ public class ArgumentModelBuilder {
    private final List<ExpectedPlainArgument> arguments;
    private final Map<Character, ExpectedOption> options;
    private final Map<String, ExpectedOption> longOptions;
-   private final Map<String, Command> commands;
+   private final CommandGroup commands;
    private final Set<ExpectedArgument> mandatories;
 
    private boolean minusMinusPresent = false;
@@ -51,14 +51,14 @@ public class ArgumentModelBuilder {
    public ArgumentModelBuilder(List<ExpectedPlainArgument> arguments,
                                Map<Character, ExpectedOption> options,
                                Map<String, ExpectedOption> longOptions,
-                               Map<String, Command> commands,
+                               CommandGroup commands,
                                int plainArgIndex) {
       this.arguments = Objects.requireNonNull(arguments);
       this.options = Objects.requireNonNull(options);
       this.longOptions = Objects.requireNonNull(longOptions);
-      this.commands = commands == null ? new HashMap<>(0) : commands;
+      this.commands = commands;
       this.plainArgIndex = plainArgIndex;
-      this.mandatories = Stream.of(arguments, commands.values())
+      this.mandatories = Stream.of(arguments, commands == null ? Collections.<Command>emptySet() : commands.asCollection())
                                .flatMap(Collection::stream)
                                .filter(ExpectedArgument::isMandatory)
                                .collect(Collectors.toSet());
@@ -90,7 +90,7 @@ public class ArgumentModelBuilder {
    public ArgumentModelBuilder(List<ExpectedPlainArgument> arguments,
                                Map<Character, ExpectedOption> options,
                                Map<String, ExpectedOption> longOptions,
-                               Map<String, Command> commands) {
+                               CommandGroup commands) {
 
       this(arguments, options, longOptions, commands, 0);
    }
@@ -148,7 +148,7 @@ public class ArgumentModelBuilder {
                                                     .collect(Collectors.toMap(Entry::getKey,
                                                                               e -> getValueFor(e, options)));
 
-      return new ArgumentModel(arguments, options, longOptions, commands);
+      return new ArgumentModel(arguments, options, longOptions, commands == null ? null : commands.getPresent());
    }
 
    /**
@@ -293,13 +293,7 @@ public class ArgumentModelBuilder {
     * @return <code>true</code> if the command <code>name</code> is expected, <code>false</code> otherwise.
     */
    public boolean expectsCommand(String name) {
-      Command cmd = commands.get(name);
-      if (cmd == null)
-         return false;
-
-      return !cmd.getAlternatives()
-                 .stream()
-                 .anyMatch(Command::isPresent);
+      return commands == null || commands.isPresent() ? false : commands.contains(name);
    }
 
    /**
@@ -327,7 +321,7 @@ public class ArgumentModelBuilder {
                                                                                          UnknownArgumentException,
                                                                                          UnexpectedOptionValueException,
                                                                                          InvalidOptionFormatException {
-      Command cmd = commands.get(name);
+      Command cmd = commands.getCommand(name);
       if (cmd == null)
          return false;
 
