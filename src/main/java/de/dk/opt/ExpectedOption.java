@@ -1,6 +1,8 @@
 package de.dk.opt;
 
-import de.dk.util.StringUtils;
+import de.dk.util.Util;
+
+import java.util.Objects;
 
 /**
  * @author David Koettlitz
@@ -52,7 +54,7 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
    }
 
    public void setDescription(String description) {
-      this.description = StringUtils.isBlank(description) ? null : description;
+      this.description = Util.isBlank(description) ? null : description;
    }
 
    @Override
@@ -90,7 +92,7 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
    }
 
    public void setLongKey(String longKey) {
-      this.longKey = StringUtils.isBlank(longKey) ? null : longKey;
+      this.longKey = Util.isBlank(longKey) ? null : longKey;
    }
 
    @Override
@@ -141,37 +143,21 @@ public class ExpectedOption implements ExpectedArgument, Cloneable {
    }
 
    @Override
-   public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + this.key;
-      result = prime * result + ((this.longKey == null) ? 0 : this.longKey.hashCode());
-      result = prime * result + ((this.value == null) ? 0 : this.value.hashCode());
-      return result;
+   public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      ExpectedOption that = (ExpectedOption) o;
+      return key == that.key &&
+              expectsValue == that.expectsValue &&
+              present == that.present &&
+              Objects.equals(longKey, that.longKey) &&
+              Objects.equals(description, that.description) &&
+              Objects.equals(value, that.value);
    }
 
    @Override
-   public boolean equals(Object obj) {
-      if (this == obj)
-         return true;
-      if (obj == null)
-         return false;
-      if (getClass() != obj.getClass())
-         return false;
-      ExpectedOption other = (ExpectedOption) obj;
-      if (this.key != other.key)
-         return false;
-      if (this.longKey == null) {
-         if (other.longKey != null)
-            return false;
-      } else if (!this.longKey.equals(other.longKey))
-         return false;
-      if (this.value == null) {
-         if (other.value != null)
-            return false;
-      } else if (!this.value.equals(other.value))
-         return false;
-      return true;
+   public int hashCode() {
+      return Objects.hash(key, longKey, expectsValue, description, value, present);
    }
 
    @Override

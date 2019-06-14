@@ -38,7 +38,7 @@ public class ArgumentModel implements Iterable<String> {
                         Command command) {
       this.arguments = Util.nonNull(arguments, Collections::emptySortedMap);
       this.options = Util.nonNull(options, Collections::emptySortedMap);
-      this.longOptions = Util.nonNull(longOptions, Collections::emptySortedMap);;
+      this.longOptions = Util.nonNull(longOptions, Collections::emptySortedMap);
       this.command = command;
    }
 

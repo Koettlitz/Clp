@@ -17,7 +17,7 @@ public interface ArgumentBuilder {
     * <code>ArgumentParserBuilder</code>
     * @throws IllegalStateException If the argument could not be build
     */
-   public ArgumentParserBuilder build() throws UnsupportedOperationException, IllegalStateException;
+   ArgumentParserBuilder build() throws UnsupportedOperationException, IllegalStateException;
 
    /**
     * Builds the argument and passes it to the parent argumentparser builder.
@@ -30,7 +30,7 @@ public interface ArgumentBuilder {
     *
     * @throws IllegalStateException If the argument could not be build
     */
-   public ExpectedArgument buildAndGet() throws IllegalStateException;
+   ExpectedArgument buildAndGet() throws IllegalStateException;
 
    /**
     * Set a description of the argument. This description can be printed for the user to help him.
@@ -39,12 +39,12 @@ public interface ArgumentBuilder {
     *
     * @return This argument builder to go on
     */
-   public ArgumentBuilder setDescription(String description);
+   ArgumentBuilder setDescription(String description);
 
    /**
     * Informs if this ArgumentBuilder is a children of another builder or not.
     *
     * @return <code>true</code> if this builder has a parentbuilder the result is passed to, <code>false</code> otherwise.
     */
-   public boolean isChild();
+   boolean isChild();
 }

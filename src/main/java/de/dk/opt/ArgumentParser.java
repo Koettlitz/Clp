@@ -24,7 +24,6 @@ import de.dk.opt.ex.UnexpectedOptionValueException;
 import de.dk.opt.ex.UnknownArgumentException;
 import de.dk.util.ArrayIterator;
 import de.dk.util.PeekableIterator;
-import de.dk.util.StringUtils;
 import de.dk.util.Util;
 
 /**
@@ -346,7 +345,7 @@ public class ArgumentParser {
       for (ExpectedArgument arg : allArguments) {
          out.println();
          out.println(arg.fullName());
-         if (!StringUtils.isBlank(arg.getDescription()))
+         if (!Util.isBlank(arg.getDescription()))
             out.println(arg.getDescription());
       }
    }

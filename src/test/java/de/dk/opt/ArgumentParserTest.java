@@ -437,8 +437,7 @@ public class ArgumentParserTest {
                                       "loong",
                                       OPT_LONG_KEY1,
                                       OPT_LONG_KEY2,
-                                      OPT_LONG_KEY2,
-                                      CMD_NAME0);
+                                      OPT_LONG_KEY2);
 
       ArgumentParser parser = ArgumentParserBuilder.begin()
                                                    .addArgument(ARG_NAME0)
