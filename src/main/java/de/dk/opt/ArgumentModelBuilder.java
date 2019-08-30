@@ -2,16 +2,8 @@ package de.dk.opt;
 
 import static de.dk.opt.ExpectedOption.NO_KEY;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,6 +22,7 @@ import de.dk.util.PeekableIterator;
  */
 public class ArgumentModelBuilder {
    private final List<ExpectedPlainArgument> arguments;
+   private final List<String> varArgs;
    private final Map<Character, ExpectedOption> options;
    private final Map<String, ExpectedOption> longOptions;
    private final CommandGroup commands;
@@ -53,12 +46,14 @@ public class ArgumentModelBuilder {
                                Map<String, ExpectedOption> longOptions,
                                CommandGroup commands,
                                int plainArgIndex) {
-      this.arguments = Objects.requireNonNull(arguments);
+      this.arguments = arguments;
+      this.varArgs = arguments == null ? new LinkedList<>() : null;
       this.options = Objects.requireNonNull(options);
       this.longOptions = Objects.requireNonNull(longOptions);
       this.commands = commands;
       this.plainArgIndex = plainArgIndex;
-      this.mandatories = Stream.of(arguments, commands == null ? Collections.<Command>emptySet() : commands.asCollection())
+      this.mandatories = Stream.of(Optional.ofNullable(arguments).orElse(Collections.emptyList()),
+                                   commands == null ? Collections.<Command>emptySet() : commands.asCollection())
                                .flatMap(Collection::stream)
                                .filter(ExpectedArgument::isMandatory)
                                .collect(Collectors.toSet());
@@ -109,6 +104,10 @@ public class ArgumentModelBuilder {
       this(arguments, options, longOptions, null, 0);
    }
 
+   public ArgumentModelBuilder(Map<Character, ExpectedOption> options, Map<String, ExpectedOption> longOptions) {
+      this(null, options, longOptions);
+   }
+
    public static ExpectedOption getValueFor(Entry<String, ExpectedOption> longOptionEntry,
                                             Map<Character, ExpectedOption> options) {
 
@@ -131,10 +130,6 @@ public class ArgumentModelBuilder {
       if (!allMandatoriesPresent())
          throw new MissingArgumentException(mandatories);
 
-      LinkedHashMap<String, ExpectedPlainArgument> arguments = new LinkedHashMap<>();
-      for (ExpectedPlainArgument arg : this.arguments)
-         arguments.put(arg.getName(), arg);
-
       Map<Character, ExpectedOption> options = this.options
                                                    .entrySet()
                                                    .stream()
@@ -148,6 +143,14 @@ public class ArgumentModelBuilder {
                                                     .collect(Collectors.toMap(Entry::getKey,
                                                                               e -> getValueFor(e, options)));
 
+      if (isVarArgs())
+         return new ArgumentModel(varArgs, options, longOptions, commands == null ? null : commands.getPresent());
+
+
+      LinkedHashMap<String, ExpectedPlainArgument> arguments = new LinkedHashMap<>();
+      for (ExpectedPlainArgument arg : this.arguments)
+         arguments.put(arg.getName(), arg);
+
       return new ArgumentModel(arguments, options, longOptions, commands == null ? null : commands.getPresent());
    }
 
@@ -160,12 +163,18 @@ public class ArgumentModelBuilder {
     *
     * @throws NoSuchElementException If no more arguments are expected
     */
-   public ExpectedPlainArgument nextArg() throws NoSuchElementException {
+   public ExpectedPlainArgument nextArg(String arg) throws NoSuchElementException {
+      if (isVarArgs()) {
+         varArgs.add(arg);
+         return null;
+      }
+
       if (plainArgIndex >= arguments.size())
          throw new NoSuchElementException("No Argument left");
 
       ExpectedPlainArgument next = arguments.get(plainArgIndex++);
       mandatories.remove(next);
+      next.setValue(arg);
       return next;
    }
 
@@ -339,5 +348,9 @@ public class ArgumentModelBuilder {
                                      .orElse(false);
       }
       return minusMinusPresent;
+   }
+
+   public boolean isVarArgs() {
+      return arguments == null;
    }
 }

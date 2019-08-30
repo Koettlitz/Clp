@@ -180,7 +180,7 @@ public class ArgumentParser {
                   iterator.next();
                   builder.parseCommand(arg, iterator);
                } else {
-                  handlePlainArgument(arg, builder);
+                  builder.nextArg(arg);
                   iterator.next();
                }
             } else {
@@ -200,13 +200,6 @@ public class ArgumentParser {
       }
 
       return builder.build();
-   }
-
-   private static void handlePlainArgument(String arg,
-                                           ArgumentModelBuilder builder) throws NoSuchElementException {
-      ExpectedPlainArgument expected;
-      expected = builder.nextArg();
-      expected.setValue(arg);
    }
 
    private static ExpectedOption handleOption(String arg,

@@ -46,7 +46,7 @@ public class ArgumentParserTest {
          return parser.parseArguments(args);
       } catch (ArgumentParseException |
                IllegalArgumentException e) {
-         fail(e.getMessage());
+         fail(e);
       }
       return null;
    }

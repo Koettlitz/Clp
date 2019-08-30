@@ -67,6 +67,7 @@ public class ArgumentParserBuilder {
    private String[] helpArgs;
 
    private short argCount;
+   private boolean varArgs = false;
 
    public ArgumentParserBuilder(CommandBuilder parentBuilder) {
       this.parentBuilder = parentBuilder;
@@ -133,8 +134,12 @@ public class ArgumentParserBuilder {
     * @return An argument builder that will be a child builder of this builder
     *
     * @throws NullPointerException If the given <code>name</code> is <code>null</code>
+    * @throws IllegalStateException if <code>varArgs</code> was set to <code>true</code>.
     */
-   public PlainArgumentBuilder buildArgument(String name) throws NullPointerException {
+   public PlainArgumentBuilder buildArgument(String name) throws NullPointerException, IllegalStateException {
+      if (varArgs)
+         throw new IllegalStateException("Cannot add ExpectedArgument, because varArgs was set to true.");
+
       return new PlainArgumentBuilder(this, argCount++, name);
    }
 
@@ -148,8 +153,9 @@ public class ArgumentParserBuilder {
     * @return This argumentparser builder to go on
     *
     * @throws NullPointerException If the given <code>name</code> is <code>null</code>
+    * @throws IllegalStateException if <code>varArgs</code> was set to <code>true</code>.
     */
-   public ArgumentParserBuilder addArgument(String name) throws NullPointerException {
+   public ArgumentParserBuilder addArgument(String name) throws NullPointerException, IllegalStateException {
       return addArgument(new ExpectedPlainArgument(argCount++, name));
    }
 
@@ -164,8 +170,9 @@ public class ArgumentParserBuilder {
     * @return This argumentparser builder to go on
     *
     * @throws NullPointerException If the given <code>name</code> is <code>null</code>
+    * @throws IllegalStateException if <code>varArgs</code> was set to <code>true</code>.
     */
-   public ArgumentParserBuilder addArgument(String name, String description) throws NullPointerException {
+   public ArgumentParserBuilder addArgument(String name, String description) throws NullPointerException, IllegalStateException {
       return addArgument(new ExpectedPlainArgument(argCount++, name, description));
    }
 
@@ -179,8 +186,10 @@ public class ArgumentParserBuilder {
     * @return This argumentparser builder to go on
     *
     * @throws NullPointerException If the given <code>name</code> is <code>null</code>
+    * @throws IllegalStateException if <code>varArgs</code> was set to <code>true</code>.
     */
-   public ArgumentParserBuilder addArgument(String name, boolean mandatory, String description) throws NullPointerException {
+   public ArgumentParserBuilder addArgument(String name, boolean mandatory, String description) throws NullPointerException,
+                                                                                                       IllegalStateException {
       return addArgument(new ExpectedPlainArgument(argCount++, name, mandatory, description));
    }
 
@@ -190,8 +199,13 @@ public class ArgumentParserBuilder {
     * @param argument The argument to be added
     *
     * @return This argumentparser builder to go on
+    *
+    * @throws IllegalStateException if <code>varArgs</code> was set to <code>true</code>.
     */
-   protected ArgumentParserBuilder addArgument(ExpectedPlainArgument argument) {
+   protected ArgumentParserBuilder addArgument(ExpectedPlainArgument argument) throws IllegalStateException {
+      if (varArgs)
+         throw new IllegalStateException("Cannot add ExpectedArgument, because varArgs was set to true.");
+
       if (arguments == null)
          arguments = new ArrayList<>();
 
@@ -305,6 +319,26 @@ public class ArgumentParserBuilder {
 
    protected ArgumentParserBuilder setCommands(CommandGroup commands) {
       this.commands = commands;
+      return this;
+   }
+
+   /**
+    * Set whether there should be a variable list of arguments, or a predefined number of expected arguments.
+    * (Can only be one of the two states. If set to <code>true</code> you cannot add <code>ExpectedArguments</code>)
+    *
+    * @param varArgs <code>true</code> if there is a variable number of arguments
+    *                {@code false} if there is a predefined set of expected arguments
+    *
+    * @return this argumentParserBuilder to continue
+    *
+    * @throws IllegalStateException If <code>varArgs</code> is true and there were already some <code>ExpectedArguments</code> added.
+    */
+   public ArgumentParserBuilder setVarArgs(boolean varArgs) throws IllegalStateException {
+      if (arguments != null && varArgs)
+         throw new IllegalStateException("There were already specified expected arguments added. " +
+                                         "Can only have one of a set of specific expected arguments or var args");
+
+      this.varArgs = varArgs;
       return this;
    }
 

@@ -1,12 +1,11 @@
 package de.dk.opt;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import de.dk.util.Util;
+
+import javax.swing.text.html.Option;
 
 /**
  * Represents parsed arguments. This class is implementing the <code>Iterable</code> interface
@@ -20,27 +19,57 @@ import de.dk.util.Util;
  */
 public class ArgumentModel implements Iterable<String> {
    private final Map<String, ExpectedPlainArgument> arguments;
+   private final List<String> varArgs;
    private final Map<Character, ExpectedOption> options;
    private final Map<String, ExpectedOption> longOptions;
    private final Command command;
 
-   /**
-    * Creates a new argument model with argument and options.
-    *
-    * @param arguments The arguments mapped by their names
-    * @param options The options mapped by their key characters
-    * @param longOptions The long options mapped by their long keys
-    * @param command The provided command
-    */
-   public ArgumentModel(LinkedHashMap<String, ExpectedPlainArgument> arguments,
-                        Map<Character, ExpectedOption> options,
-                        Map<String, ExpectedOption> longOptions,
-                        Command command) {
-      this.arguments = Util.nonNull(arguments, Collections::emptySortedMap);
-      this.options = Util.nonNull(options, Collections::emptySortedMap);
-      this.longOptions = Util.nonNull(longOptions, Collections::emptySortedMap);
-      this.command = command;
-   }
+    /**
+     * Creates a new argument model with argument and options.
+     *
+     * @param arguments The arguments mapped by their names
+     * @param options The options mapped by their key characters
+     * @param longOptions The long options mapped by their long keys
+     * @param command The provided command
+     */
+    public ArgumentModel(LinkedHashMap<String, ExpectedPlainArgument> arguments,
+                         Map<Character, ExpectedOption> options,
+                         Map<String, ExpectedOption> longOptions,
+                         Command command) {
+        this.arguments = Util.nonNull(arguments, Collections::emptySortedMap);
+        this.varArgs = null;
+        this.options = Util.nonNull(options, Collections::emptySortedMap);
+        this.longOptions = Util.nonNull(longOptions, Collections::emptySortedMap);
+        this.command = command;
+    }
+
+    /**
+     * Creates a new argument model with argument and options.
+     *
+     * @param options The options mapped by their key characters
+     * @param longOptions The long options mapped by their long keys
+     * @param command The provided command
+     */
+    public ArgumentModel(List<String> varArgs,
+                         Map<Character, ExpectedOption> options,
+                         Map<String, ExpectedOption> longOptions,
+                         Command command) {
+        this.arguments = null;
+        this.varArgs = varArgs;
+        this.options = Optional.ofNullable(options).orElseGet(Collections::emptySortedMap);
+        this.longOptions = Optional.ofNullable(longOptions).orElseGet(Collections::emptySortedMap);
+        this.command = command;
+    }
+
+    public Collection<String> getArguments() {
+        if (varArgs != null)
+            return varArgs;
+
+        return arguments.values()
+                        .stream()
+                        .map(ExpectedPlainArgument::getValue)
+                        .collect(Collectors.toList());
+    }
 
    /**
     * Get the value of the argument with the given <code>name</code>.
@@ -62,8 +91,9 @@ public class ArgumentModel implements Iterable<String> {
     * @return An optional that contains the arguments value if present.
     */
    public Optional<String> getOptionalArgumentValue(String name) {
-      return Optional.ofNullable(arguments.get(name))
-                     .map(ExpectedPlainArgument::getValue);
+       return Optional.ofNullable(arguments)
+                      .flatMap(a -> Optional.ofNullable(a.get(name)))
+                      .map(ExpectedPlainArgument::getValue);
    }
 
    /**
@@ -74,9 +104,10 @@ public class ArgumentModel implements Iterable<String> {
     * @return <code>true</code> if the agument was given. <code>false</code> otherwise
     */
    public boolean isArgumentPresent(String name) {
-      return Optional.ofNullable(arguments.get(name))
-                     .map(ExpectedArgument::isPresent)
-                     .orElse(false);
+       return Optional.ofNullable(arguments)
+                      .flatMap(a -> Optional.ofNullable(a.get(name)))
+                      .map(ExpectedArgument::isPresent)
+                      .orElse(false);
    }
 
    /**
@@ -195,9 +226,12 @@ public class ArgumentModel implements Iterable<String> {
 
     @Override
     public Iterator<String> iterator() {
-       return arguments.values()
-                       .stream()
-                       .map(ExpectedPlainArgument::getValue)
-                       .iterator();
+        if (varArgs != null)
+            return varArgs.iterator();
+
+        return arguments.values()
+                        .stream()
+                        .map(ExpectedPlainArgument::getValue)
+                        .iterator();
     }
 }
