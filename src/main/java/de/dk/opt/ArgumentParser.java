@@ -4,17 +4,8 @@ import static de.dk.opt.ExpectedOption.NO_KEY;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import de.dk.opt.ex.InvalidOptionFormatException;
@@ -52,30 +43,34 @@ public class ArgumentParser {
 
    private Collection<String> helpArgs = new LinkedList<>(Arrays.asList(DEFAULT_HELP_ARGS));
    private boolean ignoreUnknown;
+   private boolean varArgs;
 
    public ArgumentParser(List<ExpectedPlainArgument> arguments,
                          Map<Character, ExpectedOption> options,
                          Map<String, ExpectedOption> longOptions,
-                         CommandGroup commands) {
-      this.arguments = Util.nonNull(arguments, Collections::emptyList);
+                         CommandGroup commands,
+                         boolean varArgs) {
+      this.arguments = arguments;
       this.options = Util.nonNull(options, Collections::emptyMap);
       this.longOptions = Util.nonNull(longOptions, Collections::emptyMap);
       this.commands = commands;
+      this.varArgs = varArgs;
 
-      this.allArguments = Stream.of(this.arguments,
+      this.allArguments = Stream.of(this.arguments == null ? new LinkedList<ExpectedPlainArgument>() : this.arguments,
                                     this.options.values(),
                                     this.longOptions.values(),
                                     commands == null ? Collections.<Command>emptySet() : commands.asCollection())
                                 .flatMap(Collection::stream)
-                                .sorted((a, b) -> a.getIndex() - b.getIndex())
+                                .sorted(Comparator.comparingInt(ExpectedArgument::getIndex))
                                 .distinct()
                                 .toArray(ExpectedArgument[]::new);
    }
 
    public ArgumentParser(List<ExpectedPlainArgument> arguments,
                          Map<Character, ExpectedOption> options,
-                         Map<String, ExpectedOption> longOptions) {
-      this(arguments, options, longOptions, null);
+                         Map<String, ExpectedOption> longOptions,
+                         boolean varArgs) {
+      this(arguments, options, longOptions, null, varArgs);
    }
 
    /**
@@ -101,7 +96,9 @@ public class ArgumentParser {
    public ArgumentModel parseArguments(int offset, String... args) throws MissingArgumentException,
                                                                           MissingOptionValueException,
                                                                           UnknownArgumentException,
-                                                                          UnexpectedOptionValueException, InvalidOptionFormatException, IllegalArgumentException {
+                                                                          UnexpectedOptionValueException,
+                                                                          InvalidOptionFormatException,
+                                                                          IllegalArgumentException {
       return parseArguments(ArrayIterator.of(offset, args.length - offset, args));
    }
 
@@ -250,13 +247,18 @@ public class ArgumentParser {
       return result;
    }
 
-   private synchronized ArgumentModelBuilder createModelBuilder() {
-      List<ExpectedPlainArgument> arguments = this.arguments
-                                                  .stream()
-                                                  .map(ExpectedPlainArgument::clone)
-                                                  .collect(ArrayList::new,
-                                                           Collection::add,
-                                                           Collection::addAll);
+   private ArgumentModelBuilder createModelBuilder() {
+      List<ExpectedPlainArgument> arguments;
+      if (this.arguments != null) {
+         arguments = this.arguments
+                         .stream()
+                         .map(ExpectedPlainArgument::clone)
+                         .collect(ArrayList::new,
+                                  Collection::add,
+                                  Collection::addAll);
+      } else {
+         arguments = varArgs ? null : new LinkedList<>();
+      }
 
       Map<Character, ExpectedOption> options = this.options
                                                    .entrySet()
@@ -264,7 +266,7 @@ public class ArgumentParser {
                                                    .collect(toMap(Entry::getKey,
                                                                   e -> e.getValue().clone()));
 
-      short count = (short) (arguments.size() + options.size() + (commands == null ? 0 : 1));
+      short count = (short) ((arguments == null ? 0 : arguments.size()) + options.size() + (commands == null ? 0 : 1));
 
       Map<String, ExpectedOption> longOptions = new HashMap<>();
       for (Entry<String, ExpectedOption> e : this.longOptions.entrySet()) {
@@ -285,7 +287,7 @@ public class ArgumentParser {
                                              '-',
                                              "--",
                                              "Indicates, that the following arguments are plain arguments"
-                                             + "and no options, even if they have a leading \'-\'"));
+                                             + "and no options, even if they have a leading '-'"));
       }
 
       return new ArgumentModelBuilder(arguments, options, longOptions, commands);

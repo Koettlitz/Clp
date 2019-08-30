@@ -93,7 +93,7 @@ public class ArgumentParserBuilder {
     * @return A new argumentparser
     */
    public ArgumentParser buildAndGet() {
-      ArgumentParser parser = new ArgumentParser(arguments, options, longOptions, commands);
+      ArgumentParser parser = new ArgumentParser(arguments, options, longOptions, commands, varArgs);
       parser.setIgnoreUnknown(ignoreUnknown);
       if (helpArgs != null)
          parser.setHelpArgs(Arrays.asList(helpArgs));

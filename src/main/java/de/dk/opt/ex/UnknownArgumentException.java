@@ -11,6 +11,7 @@ public class UnknownArgumentException extends ArgumentParseException {
 
    public UnknownArgumentException(String arg) {
       super("Unknown argument: " + arg);
+      this.arg = arg;
    }
 
    public String getUnknownArg() {

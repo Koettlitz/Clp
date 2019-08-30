@@ -61,7 +61,7 @@ public class ArgumentModel implements Iterable<String> {
         this.command = command;
     }
 
-    public Collection<String> getArguments() {
+    public Collection<String> getPlainArguments() {
         if (varArgs != null)
             return varArgs;
 

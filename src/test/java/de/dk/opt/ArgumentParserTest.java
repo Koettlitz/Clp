@@ -1,11 +1,8 @@
 package de.dk.opt;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import org.junit.jupiter.api.Test;
@@ -51,6 +48,13 @@ public class ArgumentParserTest {
       return null;
    }
 
+   private static Iterator<String> verifyVarArgs(ArgumentModel model, int count) {
+      Collection<String> parsedArguments = model.getPlainArguments();
+      assertNotNull(parsedArguments, "VarArgs were not parsed.");
+      assertEquals(count, parsedArguments.size(), "Wrong number of varArgs was parsed.");
+      return parsedArguments.iterator();
+   }
+
    @Test
    public void singlePlainArgIsPresent() {
       ArgumentParser parser = ArgumentParserBuilder.begin()
@@ -76,6 +80,43 @@ public class ArgumentParserTest {
       assertEquals(ARG_VALUE0, result.getArgumentValue(ARG_NAME0));
       assertEquals(ARG_VALUE1, iterator.next());
       assertEquals(ARG_VALUE1, result.getArgumentValue(ARG_NAME1));
+   }
+
+   @Test
+   public void singleVarArgIsPresent() {
+      ArgumentParser parser = ArgumentParserBuilder.begin()
+              .setVarArgs(true)
+              .buildAndGet();
+
+      ArgumentModel result = parse(parser, ARG_VALUE0);
+      Iterator<String> iterator = verifyVarArgs(result, 1);
+      assertEquals(ARG_VALUE0, iterator.next());
+   }
+
+   @Test
+   public void multipleVarArgsArePresent() {
+      ArgumentParser parser = ArgumentParserBuilder.begin()
+                                                   .setVarArgs(true)
+                                                   .buildAndGet();
+
+      ArgumentModel result = parse(parser, ARG_VALUE0, ARG_VALUE1);
+      Iterator<String> iterator = verifyVarArgs(result, 2);
+      assertEquals(ARG_VALUE0, iterator.next());
+      assertEquals(ARG_VALUE1, iterator.next());
+   }
+
+   @Test
+   public void varArgsAndOptionsArePresent() {
+      ArgumentParser parser = ArgumentParserBuilder.begin()
+                                                   .setVarArgs(true)
+                                                   .addOption(OPT_KEY0)
+                                                   .buildAndGet();
+
+      ArgumentModel result = parse(parser, ARG_VALUE0, ARG_VALUE1, "-" + OPT_KEY0);
+      Iterator<String> iterator = verifyVarArgs(result, 2);
+      assertEquals(ARG_VALUE0, iterator.next());
+      assertEquals(ARG_VALUE1, iterator.next());
+      assertTrue(result.isOptionPresent(OPT_KEY0), "Option was not parsed.");
    }
 
    @Test
@@ -473,6 +514,22 @@ public class ArgumentParserTest {
                                                    .buildAndGet();
 
       assertThrows(UnknownArgumentException.class, () -> parser.parseArguments(ARG_VALUE0, "InvalidArg"));
+   }
+
+   @Test
+   public void exceptionIsThrownWhenAddingExpectedArgsOnVarArgMode() {
+      ArgumentParserBuilder builder = ArgumentParserBuilder.begin().setVarArgs(true);
+      assertThrows(IllegalStateException.class, () -> {
+          builder.addArgument(ARG_NAME0);
+      });
+   }
+
+   @Test
+   public void exceptionIsThrownWhenSettingVarArgModeAfterAddingExpectedArgument() {
+      ArgumentParserBuilder builder = ArgumentParserBuilder.begin().addArgument(ARG_NAME0);
+      assertThrows(IllegalStateException.class, () -> {
+         builder.setVarArgs(true);
+      });
    }
 
 }
