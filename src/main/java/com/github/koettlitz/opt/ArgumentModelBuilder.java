@@ -159,6 +159,8 @@ public class ArgumentModelBuilder {
     * If the argument is mandatory it is assumed to be present.
     * Only call this method if a next argument is present.
     *
+    * @param arg The provided argument String
+    *
     * @return The next plain argument
     *
     * @throws NoSuchElementException If no more arguments are expected

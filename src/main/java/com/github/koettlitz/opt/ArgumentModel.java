@@ -23,7 +23,7 @@ public class ArgumentModel implements Iterable<String> {
    private final Command command;
 
     /**
-     * Creates a new argument model with argument and options.
+     * Creates a new argument model with arguments and options.
      *
      * @param arguments The arguments mapped by their names
      * @param options The options mapped by their key characters
@@ -42,8 +42,9 @@ public class ArgumentModel implements Iterable<String> {
     }
 
     /**
-     * Creates a new argument model with argument and options.
+     * Creates a new argument model with arguments and options.
      *
+     * @param varArgs The list of given plain arguments, that could be of any length
      * @param options The options mapped by their key characters
      * @param longOptions The long options mapped by their long keys
      * @param command The provided command

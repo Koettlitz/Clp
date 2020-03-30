@@ -16,6 +16,7 @@ public class CommandBuilder implements ArgumentBuilder {
     * The argument that this argument builder is building is passed to the <code>parentBuilder</code>.
     *
     * @param parentBuilder The argumentparser builder this argument builder belongs to
+    * @param group The command group (set of commands that are applicable at this location)
     * @param index The index of the argument it has in the order
     * @param name The name of the argument
     */
